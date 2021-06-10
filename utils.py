@@ -11,6 +11,10 @@ async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
 
     Args:
         content (str): content to write in file, can be a dictionary or text
+        kwargs (dict): meta data such as:
+          filename (str): file where to write,
+          is_json (bool): write in json file,
+          newline (bool): if True line ends with '\n'
 
     Raises:
         Exception: if not filename specified
@@ -50,7 +54,7 @@ def processing_bytes(content: bytes) -> str:
     """
     print(
         f"{BColors.OKBLUE}Processing request content...{BColors.ENDC}",
-        end="\t",
+        end="\t\t\t\t\t",
     )
     new_content = "\n".join(
         list(
@@ -66,6 +70,7 @@ def processing_bytes(content: bytes) -> str:
     return new_content
 
 
+
 @cache
 def extract_dirs_files_urls_to_dict(
     text: str, origin="http://127.0.0.1"
@@ -79,17 +84,17 @@ def extract_dirs_files_urls_to_dict(
     """
     print(
         f"{BColors.OKBLUE}Extracting directories and files...{BColors.ENDC}",
-        end="\t",
+        end="\t\t\t\t",
     )
+    # Extract dirs and files
+    dirs_files: list[tuple(str)] = re.findall(r"(.+\n(file|dir)\n)", text)
     data = {"dirs": [], "files": []}
-    text_arr = text.strip().split("\n")
-    for i, line in enumerate(text_arr):
-        line = line.strip()
-        if i > 0:
-            ressource = f"{origin}/{text_arr[i - 1].strip()}"
-            if line == "dir":
-                data["dirs"].append(ressource)
-            elif line == "file":
-                data["files"].append(ressource)
+    for dir_file, typeStr in dirs_files:
+        resource, *_ = dir_file.split("\n")
+        resource = f"{origin}/{resource}"
+        if "file" in typeStr:
+            data['files'].append(resource)
+        elif "dir" in typeStr:
+            data['dirs'].append(resource)
     print(f"{BColors.OKGREEN}[OK]{BColors.ENDC}")
     return data
