@@ -1,7 +1,9 @@
+import asyncio
 import re
 import json
-from typing import Optional
 from functools import cache
+from io import TextIOWrapper
+from typing import Optional, Callable
 
 from colors import BColors
 
@@ -41,9 +43,14 @@ async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
     raise Exception("You must specify a filepath or filename to create")
 
 
+async def readFile(filename: str, callback: Callable) -> TextIOWrapper:
+    with open(filename, "r") as f:
+        await callback(f)
+
+
 @cache
 def extract_dirs_files_urls_to_dict(
-    text: str, origin="http://127.0.0.1"
+    text: str, origin="http://127.0.0.1", full_url=None
 ) -> dict:
     """Extract directories and files urls in dictionary
 
@@ -52,19 +59,22 @@ def extract_dirs_files_urls_to_dict(
     Returns:
         dict[str: list]: contains files and directories
     """
-    print(
-        f"{BColors.OKBLUE}Extracting directories and files...{BColors.ENDC}",
-        end="\t\t\t\t",
-    )
+
     # Extract dirs and files
     dirs_files: list[tuple(str)] = re.findall(r"(.+\n(file|dir)\n)", text)
+    if len(dirs_files) == 0:
+        raise Exception("Bad url")
+    print(
+        f"{BColors.OKBLUE}Extracting directories and files... [{full_url}]{BColors.ENDC}",
+        end="\t\t\t",
+    )
     data = {"dirs": [], "files": []}
     for dir_file, typeStr in dirs_files:
         resource, *_ = dir_file.split("\n")
         resource = f"{origin}/{resource.strip()}"
         if "file" in typeStr:
-            data['files'].append(resource)
+            data["files"].append(resource)
         elif "dir" in typeStr:
-            data['dirs'].append(resource)
+            data["dirs"].append(resource)
     print(f"{BColors.OKGREEN}[OK]{BColors.ENDC}")
     return data
