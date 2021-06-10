@@ -5,7 +5,6 @@ from functools import cache
 from colors import BColors
 from decorators import timer
 from utils import writeInFile
-from utils import processing_bytes
 from utils import extract_dirs_files_urls_to_dict
 
 ORIGIN = "https://steamboatlife.com"
@@ -22,7 +21,7 @@ async def get_data(url: str, filename: str = "entries.txt") -> None:
             Defaults to "entries.txt".
     """
     res = requests.get(url)
-    content = processing_bytes(res.content)
+    content = res.content.decode("utf-8")
     asyncio.create_task(
         writeInFile(
             extract_dirs_files_urls_to_dict(content, origin=ORIGIN),

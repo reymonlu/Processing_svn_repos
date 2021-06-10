@@ -42,36 +42,6 @@ async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
 
 
 @cache
-def processing_bytes(content: bytes) -> str:
-    """Remove empty lines, txt with length less or equals than 2
-      and unencod character such as:
-
-    Args:
-        content (bytes): text to process
-
-    Returns:
-        str: text processed
-    """
-    print(
-        f"{BColors.OKBLUE}Processing request content...{BColors.ENDC}",
-        end="\t\t\t\t\t",
-    )
-    new_content = "\n".join(
-        list(
-            filter(
-                lambda txt: len(txt) > 2,
-                re.sub(r"\n{2,}|\n\n", "\n", content.decode("utf-8")).split(
-                    "\n"
-                ),
-            )
-        )
-    )
-    print(f"{BColors.OKGREEN}[OK]{BColors.ENDC}")
-    return new_content
-
-
-
-@cache
 def extract_dirs_files_urls_to_dict(
     text: str, origin="http://127.0.0.1"
 ) -> dict:
@@ -91,7 +61,7 @@ def extract_dirs_files_urls_to_dict(
     data = {"dirs": [], "files": []}
     for dir_file, typeStr in dirs_files:
         resource, *_ = dir_file.split("\n")
-        resource = f"{origin}/{resource}"
+        resource = f"{origin}/{resource.strip()}"
         if "file" in typeStr:
             data['files'].append(resource)
         elif "dir" in typeStr:
