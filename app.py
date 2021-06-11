@@ -7,72 +7,75 @@ from io import TextIOWrapper
 
 from colors import BColors
 from decorators import timer
-from utils import writeInFile, readFile
-from utils import extract_dirs_files_urls_to_dict
+from utils import (
+    url_is_valid,
+    writeInFile,
+    readFile,
+    extract_dirs_files_urls_to_dict,
+)
+from utils import HEADERS
 
 ORIGINS = ["https://steamboatlife.com", "http://fpcambridge.org"]
-HEADERS = {
-    "content-type": "text/html",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0",
-}
 
 
 @cache
-async def get_data(url: str, filename: str) -> None:
-    """Make request to url and copy request content into filename
+async def get_data(index: int, domain: str) -> None:
+    """Make request to domain and copy request content into filename
 
     Args:
-        url (str): resources url
+        domain (str): resources domain
         filename (str, optional): filename where to save request content.
             Defaults to "entries.txt".
     """
-    status_code = None
-    try:
-        full_url = f"{url}/.svn/entries"
-        res = requests.get(full_url, headers=HEADERS)
-        print("__________________", res.ok)
-        status_code = res.status_code
-        if res.status_code == HTTPStatus.OK:
-            content = res.content.decode("utf-8")
-            asyncio.create_task(
-                writeInFile(
-                    extract_dirs_files_urls_to_dict(
-                        content, origin=url,
-                        full_url=full_url
-                    ),
-                    filename=f"data_{filename}.json",
-                    is_json=True,
-                    newline=False,
-                )
+    status_code = 404
+    protocol: str = "https://"
+    domain = domain.strip("\n")
+    origin = f"{protocol}{domain}"
+    filename = re.search(r"\w+", domain).group()
+    filename += f"_{index}"
+    full_url = f"{protocol}{domain}/.svn/entries"
+    if url_is_valid(full_url):
+        try:
+            res = requests.get(
+                full_url, headers=HEADERS, allow_redirects=False
             )
-            asyncio.create_task(
-                writeInFile(
-                    content,
-                    filename=f"entries_{filename}.txt",
+            status_code = res.status_code
+
+            if res.status_code == HTTPStatus.OK:
+                content = res.content.decode("utf-8")
+                asyncio.create_task(
+                    writeInFile(
+                        extract_dirs_files_urls_to_dict(
+                            content, origin=origin, full_url=full_url
+                        ),
+                        filename=f"data_{filename}.json",
+                        is_json=True,
+                        newline=False,
+                    )
                 )
-            )
-        else:
-            raise Exception("Bad response")
-    except Exception:
-        print(
-            f"{BColors.FAIL}No entries file:\t[{full_url}]\tstatus_code:\
-                \t[{status_code}]"
-        )
-    return None
+                asyncio.create_task(
+                    writeInFile(
+                        content,
+                        filename=f"entries_{filename}.txt",
+                    )
+                )
+            return
+        except Exception:
+            pass
+    print(
+        f"{BColors.FAIL}No entries file:\t[{full_url}]\tstatus_code:\
+                    \t[{status_code}]"
+    )
+    return
+
+
+def f(i, d):
+    print(i, d)
 
 
 async def process_domains(f: TextIOWrapper):
-    url_prefix: str = "https://"
     for index, domain in enumerate(f, start=1):
-        url = f"{url_prefix}{domain}"
-        domain_name = re.search(r"\w+", domain).group()
-        await asyncio.create_task(
-            get_data(url.strip("\n"), f"{domain_name}_{index}"))
-    # for origin, filename in zip(ORIGINS, ["steamboatlife", "fpcambridge"]):
-
-    # print(f.readline())
-    # print(f.readline())
-    # print(f.readline())
+        await asyncio.create_task(get_data(index, domain))
 
 
 @timer
