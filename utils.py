@@ -1,23 +1,20 @@
-from http import HTTPStatus
 import re
 import json
 import requests
 from functools import cache
+from http import HTTPStatus
 from io import TextIOWrapper
 from typing import Optional, Callable
 
 from colors import BColors
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) \
-        Gecko/20100101 Firefox/55.0",
-}
+from settings import HEADERS
 
 
+@cache
 def url_is_valid(url: str) -> bool:
     try:
         res = requests.head(url, headers=HEADERS, timeout=5)
-        return res.status_code == HTTPStatus.OK
+        return HTTPStatus.OK <= res.status_code <= HTTPStatus.NOT_MODIFIED
     except Exception:
         return False
 
@@ -40,18 +37,19 @@ async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
     """
     filename = kwargs.get("filename", None)
     print(
-        f"{BColors.OKBLUE}Writing request content in file {filename}...\
+        f"\t{BColors.OKBLUE}Writing request content in file...\
           {BColors.ENDC}",
-        end="\t",
+        end="\t\t",
     )
     if filename is not None and filename.strip() != "":
-        with open(kwargs.get("filename"), "w") as f:
+        with open(kwargs.get("filename"), kwargs.get("mode", "w")) as f:
             if kwargs.get("newline", True) is True:
-                content = f"\n{content}"
+                content = f"{content}\n"
             if kwargs.get("is_json", False) is True:
                 json.dump(content, f, indent=2)
             else:
                 f.write(content)
+
         print(f"{BColors.OKGREEN}[OK]{BColors.ENDC}")
         return True
     raise Exception("You must specify a filepath or filename to create")
@@ -79,8 +77,7 @@ def extract_dirs_files_urls_to_dict(
     if len(dirs_files) == 0:
         raise Exception("Bad url")
     print(
-        f"{BColors.OKBLUE}Extracting directories and files...\
-            [{full_url}]{BColors.ENDC}",
+        f"\t{BColors.OKBLUE}Extracting directories and files...{BColors.ENDC}",
         end="\t\t\t",
     )
     data = {"dirs": [], "files": []}
