@@ -11,7 +11,35 @@ from settings import HEADERS
 
 
 @cache
+def display_timer(time: float) -> None:
+    """Format print time
+
+    Args:
+        time (float): time to print
+    """
+    COLOR = (
+        BColors.OKGREEN
+        if time < 1.5
+        else (BColors.WARNING if time < 2.5 else BColors.FAIL)
+    )
+
+    print(
+        f"{BColors.HEADER}The time it took: {BColors.ENDC}{COLOR}{time}s\
+        {BColors.ENDC}"
+    )
+    return
+
+
+@cache
 def url_is_valid(url: str) -> bool:
+    """Check url is valid by making head request and checking status code
+
+    Args:
+        url (str): url to check
+
+    Returns:
+        bool: is valid
+    """
     try:
         res = requests.head(url, headers=HEADERS, timeout=5)
         return HTTPStatus.OK <= res.status_code <= HTTPStatus.NOT_MODIFIED
@@ -55,7 +83,15 @@ async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
     raise Exception("You must specify a filepath or filename to create")
 
 
-async def readFile(filename: str, callback: Callable) -> TextIOWrapper:
+async def readFile(filename: str, callback: Callable) -> None:
+    """Read file and execute given callback on this file
+
+    Args:
+        filename (str): file to read
+        callback (Callable): callaback to execute on file
+    Returns:
+        None:
+    """
     with open(filename, "r") as f:
         await callback(f)
 
@@ -64,7 +100,7 @@ async def readFile(filename: str, callback: Callable) -> TextIOWrapper:
 def extract_dirs_files_urls_to_dict(
     text: str, origin="http://127.0.0.1", full_url=None
 ) -> dict:
-    """Extract directories and files urls in dictionary
+    """Extract directories and files urls from file content to a dictionary
 
     Args:
         text (str): text to process
@@ -88,5 +124,6 @@ def extract_dirs_files_urls_to_dict(
             data["files"].append(resource)
         elif "dir" in typeStr:
             data["dirs"].append(resource)
+
     print(f"{BColors.OKGREEN}[OK]{BColors.ENDC}")
     return data

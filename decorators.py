@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 
 def timer(func: Callable) -> Callable:
-    """Add timer a function
+    """Add timer to a function
 
     Args:
         func (Callable): function to time
