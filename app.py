@@ -13,9 +13,14 @@ from utils import (
     readFile,
     extract_dirs_files_urls_to_dict,
 )
-from utils import HEADERS
-
-ORIGINS = ["https://steamboatlife.com", "http://fpcambridge.org"]
+from settings import (
+    HEADERS,
+    TIMEOUT,
+    PROTOCOL,
+    LIST_DOMAIN_FILE,
+    LIST_BAD_DOMAINS,
+    LIST_GOOD_DOMAINS
+)
 
 
 @cache
@@ -27,19 +32,19 @@ async def get_data(index: int, domain: str) -> None:
         filename (str, optional): filename where to save request content.
             Defaults to "entries.txt".
     """
-    status_code = 404
-    protocol: str = "https://"
-    domain = domain.strip("\n")
-    origin = f"{protocol}{domain}"
-    filename = re.search(r"\w+", domain).group()
+    status: int = 404
+    origin: str = PROTOCOL + "://" + domain.strip("\n")
+    filename: str = re.search(r"\w+", domain).group()
     filename += f"_{index}"
-    full_url = f"{protocol}{domain}/.svn/entries"
+    full_url: str = f"{origin}/.svn/entries"
+
+    print(
+        f"{BColors.BOLD}{BColors.HEADER}Processing:\t[{full_url}]{BColors.ENDC}"
+    )
     if url_is_valid(full_url):
         try:
-            res = requests.get(
-                full_url, headers=HEADERS, allow_redirects=False
-            )
-            status_code = res.status_code
+            res = requests.get(full_url, headers=HEADERS, timeout=TIMEOUT)
+            status = res.status_code
 
             if res.status_code == HTTPStatus.OK:
                 content = res.content.decode("utf-8")
@@ -51,6 +56,7 @@ async def get_data(index: int, domain: str) -> None:
                         filename=f"data_{filename}.json",
                         is_json=True,
                         newline=False,
+                        domain=full_url,
                     )
                 )
                 asyncio.create_task(
@@ -59,28 +65,29 @@ async def get_data(index: int, domain: str) -> None:
                         filename=f"entries_{filename}.txt",
                     )
                 )
-            return
+                asyncio.create_task(writeInFile(
+                    full_url, filename=LIST_GOOD_DOMAINS, mode="a"
+                ))
+                return
         except Exception:
             pass
+
+    asyncio.create_task(writeInFile(full_url, filename=LIST_BAD_DOMAINS, mode="a"))
     print(
-        f"{BColors.FAIL}No entries file:\t[{full_url}]\tstatus_code:\
-                    \t[{status_code}]"
+        f"{BColors.FAIL}\t\tNo entries file or .svn folder\t\t\t[{status}]{BColors.ENDC}"
     )
     return
 
 
-def f(i, d):
-    print(i, d)
-
-
 async def process_domains(f: TextIOWrapper):
     for index, domain in enumerate(f, start=1):
-        await asyncio.create_task(get_data(index, domain))
+        if domain.strip() != "":
+            await asyncio.create_task(get_data(index, domain))
 
 
 @timer
 async def run() -> None:
-    await readFile("domains.txt", process_domains)
+    await readFile(LIST_DOMAIN_FILE, process_domains)
     return None
 
 
