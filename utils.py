@@ -1,11 +1,25 @@
-import asyncio
+from http import HTTPStatus
 import re
 import json
+import requests
 from functools import cache
 from io import TextIOWrapper
 from typing import Optional, Callable
 
 from colors import BColors
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) \
+        Gecko/20100101 Firefox/55.0",
+}
+
+
+def url_is_valid(url: str) -> bool:
+    try:
+        res = requests.head(url, headers=HEADERS, timeout=5)
+        return res.status_code == HTTPStatus.OK
+    except Exception:
+        return False
 
 
 async def writeInFile(content: str, **kwargs: dict) -> Optional[bool]:
@@ -65,7 +79,8 @@ def extract_dirs_files_urls_to_dict(
     if len(dirs_files) == 0:
         raise Exception("Bad url")
     print(
-        f"{BColors.OKBLUE}Extracting directories and files... [{full_url}]{BColors.ENDC}",
+        f"{BColors.OKBLUE}Extracting directories and files...\
+            [{full_url}]{BColors.ENDC}",
         end="\t\t\t",
     )
     data = {"dirs": [], "files": []}
