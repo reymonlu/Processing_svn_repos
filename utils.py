@@ -10,6 +10,7 @@ from colors import BColors
 from settings import HEADERS
 
 
+@cache
 def get_content_part(
     content: str, divider: Optional[int] = None, content_part: int = 0
 ) -> list[list[str]]:
