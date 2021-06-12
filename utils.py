@@ -1,13 +1,54 @@
+import os
 import re
 import json
 import requests
 from functools import cache
 from http import HTTPStatus
-from io import TextIOWrapper
 from typing import Optional, Callable
 
 from colors import BColors
 from settings import HEADERS
+
+
+def get_content_part(
+    content: str, divider: Optional[int] = None, content_part: int = 0
+) -> list[list[str]]:
+    """Divide the content as many times as the divider argument
+        and return the desired part
+
+    Args:
+        content (str): content to divide
+        divider (Optional[int], optional): number of parts if None, no change.
+            Defaults to None.
+        content_part (int, optional): part to return. Defaults to 0.
+
+    Raises:
+        ValueError: [description]
+
+    Returns:
+        list[list[str]]: results
+    """
+    content_list = content.split("\n")
+    content_length = len(content_list)
+
+    if 0 > content_part or content_part >= content_length:
+        raise ValueError(
+            "desired_part argument cannot be greater than the content list\
+                or less than 0"
+        )
+    if 0 > divider or divider > content_length:
+        raise ValueError(
+            "Divider argument cannot be greater than the content list\
+                or less than 0"
+        )
+    parts = []
+    part_length = int(content_length / divider)
+    index = 0
+    for _ in range(divider - 1):
+        parts = [*parts, content_list[index : part_length + index]]
+        index += part_length
+
+    return [*parts, content_list[index:]][content_part]
 
 
 @cache
@@ -92,7 +133,13 @@ async def readFile(filename: str, callback: Callable) -> None:
     Returns:
         None:
     """
+
     with open(filename, "r") as f:
+        f = get_content_part(
+            f.read(),
+            divider=int(os.getenv("DIVIDER", 1)),
+            content_part=int(os.getenv("CONTENT_PART", 0)),
+        )
         await callback(f)
 
 
