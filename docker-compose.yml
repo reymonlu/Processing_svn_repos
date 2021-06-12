@@ -1,0 +1,73 @@
+version: "3.9"
+services:
+  app_1:
+    build: .
+    container_name: app_1
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=0
+  app_2:
+    build: .
+    container_name: app_2
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=1
+  app_3:
+    build: .
+    container_name: app_3
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=2
+  app_4:
+    build: .
+    container_name: app_4
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=3
+
+  app_5:
+    build: .
+    container_name: app_5
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=4
+  app_6:
+    build: .
+    container_name: app_6
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=5
+  app_7:
+    build: .
+    container_name: app_7
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=6
+  app_8:
+    build: .
+    container_name: app_8
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=7
+  app_9:
+    build: .
+    container_name: app_9
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=8
+  app_10:
+    build: .
+    container_name: app_10
+    restart: unless-stopped
+    environment:
+      - DIVIDER=4
+      - CONTENT_PART=9

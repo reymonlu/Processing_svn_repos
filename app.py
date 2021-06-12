@@ -10,8 +10,8 @@ from decorators import timer
 from utils import (
     readFile,
     writeInFile,
-    display_timer,
     url_is_valid,
+    display_timer,
     extract_dirs_files_urls_to_dict,
 )
 from settings import (
@@ -83,7 +83,7 @@ async def get_data(index: int, domain: str) -> None:
     return
 
 
-async def process_domains_handler(f: TextIOWrapper) -> None:
+async def process_domains_handler(f: list[str]) -> None:
     """handler on reading domains file
 
     Args:
@@ -91,6 +91,13 @@ async def process_domains_handler(f: TextIOWrapper) -> None:
     Returns:
         None:
     """
+    print(
+        "_______________________________",
+        "Processing on ",
+        len(f),
+        "urls",
+        "_______________________________",
+    )
     for index, domain in enumerate(f, start=1):
         if domain.strip() != "":
             await asyncio.create_task(get_data(index, domain))
@@ -112,3 +119,5 @@ if __name__ == "__main__":
     times_total = 0
     _, time = asyncio.run(run())
     display_timer(time)
+    # Waiting
+    input("Press Enter to exit... ")
